@@ -1,0 +1,33 @@
+{
+    "name": "subit/php-messagebird-contactsv2-sdk",
+    "require": {
+        "guzzlehttp/guzzle": "^6.3",
+        "ext-json": "^7.4"
+    },
+    "authors": [
+        {
+            "name": "Alexander Wallin Dradrach",
+            "email": "alwa@subit.dk"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "Subit\\MessagebirdContactsSdk\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Subit\\MessagebirdContactsSdk\\Tests\\": "tests/"
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "require-dev": {
+        "roave/security-advisories": "dev-master",
+        "phpunit/phpunit": "^9",
+        "orchestra/testbench": "^5.3"
+    },
+    "scripts": {
+    	"coverage": "phpunit --coverage-html ./docs/coverage"
+    }
+}
