@@ -1,5 +1,6 @@
 {
     "name": "subit/php-messagebird-contactsv2-sdk",
+    "description": "Messagebird SDK written in PHP",
     "require": {
         "guzzlehttp/guzzle": "^6.3",
         "ext-json": "^7.4"
