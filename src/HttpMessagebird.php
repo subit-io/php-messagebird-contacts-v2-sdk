@@ -4,16 +4,20 @@ namespace Subit\MessagebirdContactsSdk;
 
 use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\Response;
+use GuzzleHttp\Exception\RequestException;
 use Subit\MessagebirdContactsSdk\Models\Contact;
 use Subit\MessagebirdContactsSdk\Models\Profile;
 use Subit\MessagebirdContactsSdk\Models\Identifier;
 use Subit\MessagebirdContactsSdk\Exceptions\ApiException;
+use Subit\MessagebirdContactsSdk\Exceptions\ApiMultipleErrorsException;
 use Subit\MessagebirdContactsSdk\Exceptions\JsonException;
 use Subit\MessagebirdContactsSdk\ReceivedModels\ContactReceived;
 use Subit\MessagebirdContactsSdk\ReceivedModels\ProfileReceived;
 use Subit\MessagebirdContactsSdk\ReceivedModels\IdentifierReceived;
 use Subit\MessagebirdContactsSdk\Exceptions\ContactIdMissingException;
 use Subit\MessagebirdContactsSdk\Exceptions\DisplayNameMissingException;
+use Subit\MessagebirdContactsSdk\Exceptions\ProfileAlreadyExistsException;
+use Subit\MessagebirdContactsSdk\Exceptions\IdentifierAlreadyExistsException;
 
 /**
  * Class Messagebird
@@ -91,7 +95,15 @@ class HttpMessagebird implements Messagebird
 
     public function createIdentifier($contactId, Identifier $identifier): IdentifierReceived
     {
-        $data = $this->send('POST', 'contacts/' . $contactId . '/identifiers', $identifier->toArray());
+        try {
+            $data = $this->send('POST', 'contacts/' . $contactId . '/identifiers', $identifier->toArray());
+        } catch (ApiException $apiException) {
+            $error = json_decode($apiException->getMessage());
+
+            if ($error->code === 101) {
+                throw new IdentifierAlreadyExistsException();
+            }
+        }
 
         return IdentifierReceived::fromArray($data);
     }
@@ -103,7 +115,15 @@ class HttpMessagebird implements Messagebird
 
     public function createProfile($contactId, Profile $profile): ProfileReceived
     {
-        $data = $this->send('POST', 'contacts/' . $contactId . '/profiles', $profile->toArray());
+        try {
+            $data = $this->send('POST', 'contacts/' . $contactId . '/profiles', $profile->toArray());
+        } catch (ApiException $apiException) {
+            $error = json_decode($apiException->getMessage());
+
+            if ($error->code === 21) {
+                throw new ProfileAlreadyExistsException();
+            }
+        }
 
         return ProfileReceived::fromArray($data);
     }
@@ -116,23 +136,46 @@ class HttpMessagebird implements Messagebird
     private function send($method, $uri, $body = null)
     {
         /** @var Response $response */
-        $response = $this->client->request(
-            $method,
-            $uri,
-            $this->setRequestOptions($body)
-        );
+        try {
+            $response = $this->client->request(
+                $method,
+                $uri,
+                $this->setRequestOptions($body)
+            );
+        } catch (RequestException $requestException) {
+            $response = $requestException->getResponse();
+            $errorResponseBody = $response->getBody()->getContents();
 
-        $body = $response->getBody()->__toString();
+            if (!empty($errorResponseBody)) {
+                // Because Messagebird has an error in their endpoint where they send null along in the body
+                $isNullEnding = substr($errorResponseBody, strlen($errorResponseBody) - 5, 4);
+                if ($isNullEnding === 'null') {
+                    $errorResponseBody = substr($errorResponseBody, 0, strlen($errorResponseBody) - 6);
+                }
+                $body = json_decode($errorResponseBody, true);
 
-        if (!empty($body)) {
-            $body = json_decode($body, true);
+                if (json_last_error() !== JSON_ERROR_NONE) {
+                    throw new JsonException($errorResponseBody, $response->getStatusCode());
+                }
+
+                if (array_key_exists('errors', $body)) {
+                    $errors = $body['errors'];
+
+                    if (count($errors) > 1) {
+                        throw new ApiMultipleErrorsException($errorResponseBody, $response->getStatusCode());
+                    }
+
+                    throw new ApiException(json_encode($errors[0]), $response->getStatusCode());
+                }
+            }
+        }
+        $responseBody = $response->getBody()->getContents();
+
+        if (!empty($responseBody)) {
+            $responseBody = json_decode($responseBody, true);
 
             if (json_last_error() !== JSON_ERROR_NONE) {
-                throw new JsonException($response->getBody()->__toString(), $response->getStatusCode());
-            }
-
-            if (array_key_exists('errors', $body)) {
-                throw new ApiException($body->errors, $response->getStatusCode());
+                throw new JsonException($responseBody, $response->getStatusCode());
             }
         }
 
