@@ -4,7 +4,7 @@
 namespace Subit\MessagebirdContactsSdk\Exceptions;
 
 
-class ApiException extends \Exception
+class ApiSingleException extends \Exception
 {
     //
 }

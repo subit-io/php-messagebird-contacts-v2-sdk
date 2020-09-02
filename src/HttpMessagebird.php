@@ -8,7 +8,7 @@ use GuzzleHttp\Exception\RequestException;
 use Subit\MessagebirdContactsSdk\Models\Contact;
 use Subit\MessagebirdContactsSdk\Models\Profile;
 use Subit\MessagebirdContactsSdk\Models\Identifier;
-use Subit\MessagebirdContactsSdk\Exceptions\ApiException;
+use Subit\MessagebirdContactsSdk\Exceptions\ApiSingleException;
 use Subit\MessagebirdContactsSdk\Exceptions\ApiMultipleErrorsException;
 use Subit\MessagebirdContactsSdk\Exceptions\JsonException;
 use Subit\MessagebirdContactsSdk\ReceivedModels\ContactReceived;
@@ -97,7 +97,7 @@ class HttpMessagebird implements Messagebird
     {
         try {
             $data = $this->send('POST', 'contacts/' . $contactId . '/identifiers', $identifier->toArray());
-        } catch (ApiException $apiException) {
+        } catch (ApiSingleException $apiException) {
             $error = json_decode($apiException->getMessage());
 
             if ($error->code === 101) {
@@ -117,7 +117,7 @@ class HttpMessagebird implements Messagebird
     {
         try {
             $data = $this->send('POST', 'contacts/' . $contactId . '/profiles', $profile->toArray());
-        } catch (ApiException $apiException) {
+        } catch (ApiSingleException $apiException) {
             $error = json_decode($apiException->getMessage());
 
             if ($error->code === 21) {
@@ -165,8 +165,9 @@ class HttpMessagebird implements Messagebird
                         throw new ApiMultipleErrorsException($errorResponseBody, $response->getStatusCode());
                     }
 
-                    throw new ApiException(json_encode($errors[0]), $response->getStatusCode());
+                    throw new ApiSingleException(json_encode($errors[0]), $response->getStatusCode());
                 }
+                throw $requestException;
             }
         }
         $responseBody = $response->getBody()->getContents();
@@ -179,6 +180,6 @@ class HttpMessagebird implements Messagebird
             }
         }
 
-        return $body;
+        return $responseBody;
     }
 }
