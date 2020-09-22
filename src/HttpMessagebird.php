@@ -102,6 +102,8 @@ class HttpMessagebird implements Messagebird
 
             if ($error->code === 101) {
                 throw new IdentifierAlreadyExistsException();
+            } else {
+                throw $apiException;
             }
         }
 
@@ -122,6 +124,8 @@ class HttpMessagebird implements Messagebird
 
             if ($error->code === 21) {
                 throw new ProfileAlreadyExistsException();
+            } else {
+                throw $apiException;
             }
         }
 
