@@ -122,7 +122,7 @@ class HttpMessagebird implements Messagebird
         } catch (ApiSingleException $apiException) {
             $error = json_decode($apiException->getMessage());
 
-            if ($error->code === 21) {
+            if ($error->code === 101) {
                 throw new ProfileAlreadyExistsException();
             } else {
                 throw $apiException;
