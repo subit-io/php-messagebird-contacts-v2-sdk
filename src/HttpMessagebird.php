@@ -148,6 +148,9 @@ class HttpMessagebird implements Messagebird
             );
         } catch (RequestException $requestException) {
             $response = $requestException->getResponse();
+            if (!$response) {
+                throw $requestException;
+            }
             $errorResponseBody = $response->getBody()->getContents();
 
             if (!empty($errorResponseBody)) {
