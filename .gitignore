@@ -4,3 +4,4 @@ composer.phar
 .DS_Store
 docs
 .phpunit.result.cache
+composer.lock
