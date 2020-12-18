@@ -3,8 +3,8 @@
     "description": "Messagebird SDK written in PHP",
     "require": {
         "guzzlehttp/guzzle": "^6.3",
-        "ext-json": "^7.4",
-        "symfony/http-kernel": "5.1.5"
+        "ext-json": ">=7.4",
+        "symfony/http-kernel": "^5"
     },
     "authors": [
         {
@@ -27,7 +27,7 @@
     "require-dev": {
         "roave/security-advisories": "dev-master",
         "phpunit/phpunit": "^9",
-        "orchestra/testbench": "^5.3"
+        "orchestra/testbench": "^5.3 || ^6"
     },
     "scripts": {
     	"coverage": "phpunit --coverage-html ./docs/coverage"
